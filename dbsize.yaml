@@ -1,0 +1,8 @@
+connections:
+  - Server=dev-db-v-02\sql2014;Database=master;Integrated Security=True
+  - Server=dev-db-v-02\sql2016;Database=master;Integrated Security=True
+  - Server=dev-db-v-02\sql2017;Database=master;Integrated Security=True
+webui:
+  port: 8080
+  chromepath: C:\Program Files (x86)\Google\Chrome\Application\chrome.exe
+  

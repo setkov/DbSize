@@ -1,0 +1,104 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>DbSize</title>
+        <link rel="stylesheet" href="lib/bulma-0.9.4/bulma.min.css">
+        <script defer src="lib/alpinejs-3.11.1/cdn.min.js"></script>
+    </head>
+    <body>
+        <div x-data="dbSize" class="container is-fluid">
+            <nav class="navbar" role="navigation" aria-label="main navigation">
+                <div class="navbar-brand">
+                    <a class="navbar-item" href="https://github.com/setkov" target="_blank">
+                        <figure class="image is-24x24">
+                            <img src="img/logo-github.svg">
+                        </figure>
+                        <span class="is-italic">&nbsp;DbSize</span>
+                    </a>
+                </div>
+                <div class="navbar-start">
+                    <div class="navbar-item">
+                        <div class="tabs">
+                            <ul>
+                                <template x-for="(server, id) in servers">
+                                    <li :class="id == selected ? 'is-active' : ''"><a @click="await select(id)" x-text="server"></a></li>
+                                </template>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+            <table class="table is-fullwidth is-size-7">
+                <thead>
+                    <tr>
+                        <th>DatabaseName</th>
+                        <th>TotalSize, Mb</th>
+                        <th>RowSize, Mb</th>
+                        <th>LogSize, Mb</th>
+                        <th>Created</th>
+                        <th>Owner</th>
+                        <th>State</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <template x-for="database in databases">
+                        <tr>
+                            <td x-text="database.DatabaseName"></td>
+                            <td x-text="database.TotalSize"></td>
+                            <td x-text="database.RowSize"></td>
+                            <td x-text="database.LogSize"></td>
+                            <td x-text="database.Created"></td>
+                            <td x-text="database.Owner"></td>
+                            <td x-text="database.State"></td>
+                            <td x-text="database.Description"></td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+
+            <div x-show="load" class="is-size-1 has-text-grey-light has-text-centered">
+                <div>load data from <span x-text="servers[selected]"></span></div>
+                <div><img src="img/loading.gif"/></div>
+            </div>
+        </div>
+
+        <script>
+            document.addEventListener('alpine:init', () => {
+                Alpine.data('dbSize', () => ({
+                    servers: [],
+                    selected: null,
+                    load: null,
+                    databases: [],
+                    init() {
+                        fetch('/api/servers')
+                            .then((response) => response.json())
+                            .then((data) => {
+                                this.servers = data;
+                            });
+                        this.select(0);
+                    },
+                    async select(id) {
+                        if (id != this.selected) {
+                            this.selected = id;
+                            this.databases = [];
+                            this.load = true;
+                            await this.get_databases(id);
+                            this.load = false;
+                        }
+                    },
+                    async get_databases(id) {
+                        await fetch('/api/databases?id='+ id)
+                                .then((response) => response.json())
+                                .then((data) => {
+                                    this.databases = data
+                                });
+                    }
+                }))
+            });
+        </script>
+    </body>
+</html>
