@@ -11,7 +11,7 @@
         <div x-data="dbSize" class="container is-fluid">
             <nav class="navbar" role="navigation" aria-label="main navigation">
                 <div class="navbar-brand">
-                    <a class="navbar-item" href="https://github.com/setkov/DbSize" target="_blank">
+                    <a class="navbar-item" href="https://github.com/setkov/DbSize" target="_blank" title="github">
                         <figure class="image is-24x24">
                             <img src="img/logo-github.svg">
                         </figure>
@@ -45,7 +45,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <template x-for="database in databases">
+                    <template x-for="(database, id) in databases">
                         <tr>
                             <td x-text="database.DatabaseName"></td>
                             <td x-text="database.TotalSize"></td>
@@ -54,7 +54,9 @@
                             <td x-text="database.Created"></td>
                             <td x-text="database.Owner"></td>
                             <td x-text="database.State"></td>
-                            <td x-text="database.Description"></td>
+                            <td>
+                                <a href="#" x-text="database.Description != '' ? database.Description : '<none>'" @click="edit(id)" title="edit"></a>
+                            </td>
                         </tr>
                     </template>
                 </tbody>
@@ -63,6 +65,29 @@
             <div x-show="load" class="is-size-1 has-text-grey-light has-text-centered">
                 <div>load data from <span x-text="servers[selected]"></span></div>
                 <div><img src="img/loading.gif"/></div>
+            </div>
+
+            <div class="modal" :class="{'is-active': active_modal}">
+                <div class="modal-background"></div>
+                <div class="modal-content">
+                    <div class="box">
+                        <div class="block" x-text="databases[edited].DatabaseName"></div>
+                        <div class="field">
+                            <label class="label is-small">Description</label>
+                            <div class="control">
+                                <textarea class="textarea is-small has-fixed-size" x-model="description"></textarea>
+                            </div>
+                        </div>
+                        <div class="field is-grouped">
+                            <div class="control">
+                                <button class="button is-small is-primary" @click="save()">Save</button>
+                            </div>
+                            <div class="control">
+                                <button class="button is-small" @click="cancel()">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -81,6 +106,7 @@
                             });
                         this.select(0);
                     },
+                    // select server
                     async select(id) {
                         if (id != this.selected) {
                             this.selected = id;
@@ -90,12 +116,35 @@
                             this.load = false;
                         }
                     },
+                    // get databases by server id
                     async get_databases(id) {
                         await fetch('/api/databases?id='+ id)
                                 .then((response) => response.json())
                                 .then((data) => {
                                     this.databases = data
                                 });
+                    },
+
+                    active_modal: false,
+                    description: null,
+                    edited: null,
+                    // edit database description
+                    edit(id) {
+                        this.edited = id;
+                        this.description = this.databases[id].Description;
+                        this.active_modal = true;
+                    },
+                    // save database description
+                    save() {
+                        if (this.description != this.databases[this.edited].Description) {
+                            //console.log(this.edited, this.description);
+                            this.databases[this.edited].Description = this.description;
+                        }
+                        this.cancel();
+                    },
+                    // cancel edit
+                    cancel() {
+                        this.active_modal = false;
                     }
                 }))
             });
