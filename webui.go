@@ -33,6 +33,7 @@ func (w *WebUI) Start() {
 	mux.Handle("/", http.FileServer(http.FS(static)))
 	mux.HandleFunc("/api/servers", w.Servers)
 	mux.HandleFunc("/api/databases", w.Databases)
+	mux.HandleFunc("/api/description", w.Description)
 
 	w.server = &http.Server{
 		Addr:    port,

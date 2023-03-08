@@ -71,7 +71,7 @@
                 <div class="modal-background"></div>
                 <div class="modal-content">
                     <div class="box">
-                        <div class="block" x-text="databases[edited].DatabaseName"></div>
+                        <div class="block" x-text="edited != null ? databases[edited].DatabaseName : ''"></div>
                         <div class="field">
                             <label class="label is-small">Description</label>
                             <div class="control">
@@ -80,7 +80,7 @@
                         </div>
                         <div class="field is-grouped">
                             <div class="control">
-                                <button class="button is-small is-primary" @click="save()">Save</button>
+                                <button class="button is-small is-primary" @click="await save()">Save</button>
                             </div>
                             <div class="control">
                                 <button class="button is-small" @click="cancel()">Cancel</button>
@@ -135,15 +135,29 @@
                         this.active_modal = true;
                     },
                     // save database description
-                    save() {
+                    async save() {
                         if (this.description != this.databases[this.edited].Description) {
-                            //console.log(this.edited, this.description);
-                            this.databases[this.edited].Description = this.description;
+                            let formData = new FormData();
+                            formData.set("id", this.selected);
+                            formData.set("database", this.databases[this.edited].DatabaseName);
+                            formData.set("description", this.description);
+
+                            let response = await fetch('/api/description', {
+                                method: 'POST',
+                                body: formData
+                            })
+                            
+                            if (response.ok) {
+                                this.databases[this.edited].Description = this.description;
+                            } else {
+                                alert(response.status);
+                            }
                         }
                         this.cancel();
                     },
                     // cancel edit
                     cancel() {
+                        this.edited = null;
                         this.active_modal = false;
                     }
                 }))

@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	_ "embed"
+	"fmt"
 
 	_ "github.com/denisenkom/go-mssqldb"
 )
@@ -56,4 +57,18 @@ func (r *DbReader) GetDataBases() (*[]DataBase, error) {
 	}
 
 	return &databases, nil
+}
+
+func (r *DbReader) EditDescription(database string, description string) error {
+	var sql = fmt.Sprintf(`
+		USE %s;
+		DECLARE	@description SQL_VARIANT = '%s';
+		IF EXISTS(SELECT value FROM sys.extended_properties WHERE class = 0 AND name = 'MS_Description')
+			EXEC sp_updateextendedproperty @name = 'MS_Description', @value = @description;
+		ELSE
+			EXEC sp_addextendedproperty @name = 'MS_Description', @value = @description;`,
+		database, description)
+
+	_, err := r.db.Exec(sql)
+	return err
 }
