@@ -23,7 +23,7 @@
                         <div class="tabs">
                             <ul>
                                 <template x-for="(server, id) in servers">
-                                    <li :class="id == selected ? 'is-active' : ''"><a @click="await select(id)" x-text="server"></a></li>
+                                    <li :class="id == selected_id ? 'is-active' : ''"><a @click="await select(id)" x-text="server"></a></li>
                                 </template>
                             </ul>
                         </div>
@@ -62,16 +62,16 @@
                 </tbody>
             </table>
 
-            <div x-show="load" class="is-size-1 has-text-grey-light has-text-centered">
-                <div>load data from <span x-text="servers[selected]"></span></div>
+            <div x-show="is_loaded" class="is-size-1 has-text-grey-light has-text-centered">
+                <div>load data from <span x-text="servers[selected_id]"></span></div>
                 <div><img src="img/loading.gif"/></div>
             </div>
 
-            <div class="modal" :class="{'is-active': active_modal}">
+            <div class="modal" :class="{'is-active': is_edited}">
                 <div class="modal-background"></div>
                 <div class="modal-content">
                     <div class="box">
-                        <div class="block" x-text="edited != null ? databases[edited].DatabaseName : ''"></div>
+                        <div class="block" x-text="edited_id != null ? databases[edited_id].DatabaseName : ''"></div>
                         <div class="field">
                             <label class="label is-small">Description</label>
                             <div class="control">
@@ -80,7 +80,7 @@
                         </div>
                         <div class="field is-grouped">
                             <div class="control">
-                                <button class="button is-small is-primary" @click="await save()">Save</button>
+                                <button class="button is-small is-primary" :class="{'is-loading': is_saved}" @click="await save()">Save</button>
                             </div>
                             <div class="control">
                                 <button class="button is-small" @click="cancel()">Cancel</button>
@@ -94,10 +94,10 @@
         <script>
             document.addEventListener('alpine:init', () => {
                 Alpine.data('dbSize', () => ({
+                    is_loaded: null,
                     servers: [],
-                    selected: null,
-                    load: null,
                     databases: [],
+                    selected_id: null,
                     init() {
                         fetch('/api/servers')
                             .then((response) => response.json())
@@ -108,12 +108,12 @@
                     },
                     // select server
                     async select(id) {
-                        if (id != this.selected) {
-                            this.selected = id;
+                        if (id != this.selected_id) {
+                            this.selected_id = id;
                             this.databases = [];
-                            this.load = true;
+                            this.is_loaded = true;
                             await this.get_databases(id);
-                            this.load = false;
+                            this.is_loaded = false;
                         }
                     },
                     // get databases by server id
@@ -125,30 +125,33 @@
                                 });
                     },
 
-                    active_modal: false,
+                    is_edited: false,
+                    is_saved: false,
+                    edited_id: null,
                     description: null,
-                    edited: null,
                     // edit database description
                     edit(id) {
-                        this.edited = id;
+                        this.edited_id = id;
                         this.description = this.databases[id].Description;
-                        this.active_modal = true;
+                        this.is_edited = true;
                     },
                     // save database description
                     async save() {
-                        if (this.description != this.databases[this.edited].Description) {
+                        if (this.description != this.databases[this.edited_id].Description) {
                             let formData = new FormData();
-                            formData.set("id", this.selected);
-                            formData.set("database", this.databases[this.edited].DatabaseName);
+                            formData.set("id", this.selected_id);
+                            formData.set("database", this.databases[this.edited_id].DatabaseName);
                             formData.set("description", this.description);
 
+                            this.is_saved = true;
                             let response = await fetch('/api/description', {
                                 method: 'POST',
                                 body: formData
                             })
+                            this.is_saved = false;
                             
                             if (response.ok) {
-                                this.databases[this.edited].Description = this.description;
+                                this.databases[this.edited_id].Description = this.description;
                             } else {
                                 alert(response.status);
                             }
@@ -157,8 +160,8 @@
                     },
                     // cancel edit
                     cancel() {
-                        this.edited = null;
-                        this.active_modal = false;
+                        this.edited_id = null;
+                        this.is_edited = false;
                     }
                 }))
             });
