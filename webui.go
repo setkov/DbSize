@@ -21,12 +21,12 @@ func NewWebUI(c *Config) *WebUI {
 	return &WebUI{config: c}
 }
 
-func (w *WebUI) Start() {
+func (w *WebUI) Start() error {
 	port := fmt.Sprintf(":%v", w.config.WebUI.Port)
 
 	static, err := fs.Sub(staticFS, "static")
 	if err != nil {
-		log.Print(err)
+		return err
 	}
 
 	mux := http.NewServeMux()
@@ -44,9 +44,11 @@ func (w *WebUI) Start() {
 	go func() {
 		w.server.ListenAndServe()
 	}()
+
+	return nil
 }
 
-func (w *WebUI) Stop() {
+func (w *WebUI) Stop() error {
 	log.Print("stop WebUI")
-	w.server.Shutdown(context.Background())
+	return w.server.Shutdown(context.Background())
 }

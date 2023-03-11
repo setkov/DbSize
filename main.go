@@ -21,12 +21,18 @@ func main() {
 	log.Printf("configuration: %#v", config)
 
 	webUI := NewWebUI(config)
-	webUI.Start()
+	err = webUI.Start()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	app := fmt.Sprintf("--app=http://localhost:%v", config.WebUI.Port)
 	user_data_dir := fmt.Sprintf("--user-data-dir=%v/DbSize/Chrome", os.Getenv("localappdata"))
 	cmd := exec.Command(config.WebUI.ChromePath, app, user_data_dir)
-	cmd.Start()
+	err = cmd.Start()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	exitSignal := make(chan os.Signal, 1)
 	signal.Notify(exitSignal, syscall.SIGINT, syscall.SIGTERM)

@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -24,8 +23,7 @@ func (w *WebUI) Databases(rw http.ResponseWriter, r *http.Request) {
 		http.Error(rw, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	// to-do: check range
-	connection := w.config.Connections[id]
+	connection := w.config.Connections[id] // to-do: check range
 
 	dbReader, err := NewDbReader(connection)
 	if err != nil {
@@ -53,7 +51,6 @@ func (w *WebUI) Description(rw http.ResponseWriter, r *http.Request) {
 	database := r.FormValue("database")
 	description := r.FormValue("description")
 
-	//log.Printf("%v %v %v %v", id, connection, database, description)
 	dbReader, err := NewDbReader(connection)
 	if err != nil {
 		http.Error(rw, err.Error(), http.StatusInternalServerError)
@@ -62,7 +59,6 @@ func (w *WebUI) Description(rw http.ResponseWriter, r *http.Request) {
 	defer dbReader.Close()
 
 	if err := dbReader.EditDescription(database, description); err != nil {
-		log.Printf("error on edit description: %v", err)
 		http.Error(rw, err.Error(), http.StatusInternalServerError)
 		return
 	}

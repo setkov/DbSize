@@ -124,11 +124,13 @@
                     },
                     // get databases by server id
                     async get_databases(id) {
-                        await fetch('/api/databases?id='+ id)
-                                .then((response) => response.json())
-                                .then((data) => {
-                                    this.databases = data
-                                });
+                        let response = await fetch('/api/databases?id='+ id)
+                        if (response.ok) {
+                            this.databases = await response.json()
+                        } else {
+                            let text = await response.text();
+                            alert(Error(text));
+                        };
                     },
 
                     is_edited: false,
@@ -159,7 +161,8 @@
                             if (response.ok) {
                                 this.databases[this.edited_id].Description = this.description;
                             } else {
-                                alert(response.status);
+                                let text = await response.text();
+                                alert(Error(text));
                             }
                         }
                         this.cancel();
