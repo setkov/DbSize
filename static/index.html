@@ -46,7 +46,7 @@
                 </thead>
                 <tbody>
                     <template x-for="(database, id) in databases">
-                        <tr>
+                        <tr :class="database.State != 'ONLINE' ? 'has-text-danger' : ''">
                             <td x-text="database.DatabaseName"></td>
                             <td x-text="database.TotalSize"></td>
                             <td x-text="database.RowSize"></td>
@@ -55,7 +55,12 @@
                             <td x-text="database.Owner"></td>
                             <td x-text="database.State"></td>
                             <td>
-                                <a href="#" x-text="database.Description != '' ? database.Description : '<none>'" @click="edit(id)" title="edit"></a>
+                                <template x-if="database.State == 'ONLINE'">
+                                    <a href="#" x-text="database.Description != '' ? database.Description : '<none>'" @click="edit(id)" title="edit"></a>
+                                </template>
+                                <template x-if="database.State != 'ONLINE'">
+                                    <div x-text="database.Description != '' ? database.Description : '<none>'" ></div>
+                                </template>
                             </td>
                         </tr>
                     </template>
